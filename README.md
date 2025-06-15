@@ -1,4 +1,3 @@
-````markdown
 # 🤖 AI Code Review GitHub Action
 
 An AI-powered GitHub Action that automatically reviews pull requests using OpenAI's GPT models. It highlights potential bugs, suggests improvements, and helps enforce code quality standards—without needing a human to review every line.
@@ -110,5 +109,3 @@ This project is licensed under the MIT License.
 ## 🙌 Acknowledgements
 
 Built with ❤️ using GitHub Actions and OpenAI.
-
-```
