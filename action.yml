@@ -48,7 +48,7 @@ runs:
         if [ -z "$CHANGED_FILES" ]; then
           echo "No relevant files changed. Skipping review." > review_output.txt
         else
-          python ./.github/actions/ai-code-review/ai_code_review.py > review_output.txt
+          python ai_code_review.py > review_output.txt
         fi
 
     - name: Save review output
