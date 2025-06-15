@@ -22,6 +22,8 @@ DEPENDENCY_FILES = [
     "Cargo.lock"
 ]
 
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
 def read_changed_code_files(filenames: List[str]) -> str:
     content = ""
     for fname in filenames:
@@ -41,7 +43,7 @@ def read_dependency_files() -> str:
     return content or "No dependency files found."
 
 def code_review_tool_func(code_content: str) -> str:
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2, openai_api_key=openai_api_key)
     messages = [
         SystemMessage(content="You are an expert AI code reviewer. Review the following code for quality, potential issues, and improvements. Limit to 300 words."),
         HumanMessage(content=code_content),
@@ -56,7 +58,7 @@ code_review_tool = Tool(
 )
 
 def security_scan_deps_tool_func(deps_content: str) -> str:
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, openai_api_key=openai_api_key)
     messages = [
         SystemMessage(content="You are a security expert reviewing software dependencies for vulnerabilities and risks. Provide concise feedback."),
         HumanMessage(content=deps_content),
@@ -70,7 +72,7 @@ security_scan_tool = Tool(
     description="Analyze dependency files for security vulnerabilities and outdated packages."
 )
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, openai_api_key=openai_api_key)
 
 agent = initialize_agent(
     tools=[code_review_tool, security_scan_tool],
