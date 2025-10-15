@@ -1,8 +1,8 @@
 import os
 from typing import List
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.agents import Tool, initialize_agent
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 
 DEPENDENCY_FILES = [

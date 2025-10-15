@@ -27,15 +27,15 @@ runs:
       shell: bash
       run: |
         python -m pip install --upgrade pip
-        pip install langchain langchain-community openai
+        pip install langchain langchain-openai langchain-core langchain-community
 
     - name: Detect changed files
       id: detect
       shell: bash
       run: |
         files=$(git diff --name-only HEAD^ HEAD \
-          | grep -E '\.(py|js|ts|json|txt)$' \
-          | grep -vE '^\.github/|^actions/ai_code_review/' \
+          | grep -E '\.(py|js|ts|json|txt)$' || true \
+          | grep -vE '^\.github/|^actions/ai_code_review/' || true \
           | paste -sd "," -)
         echo "CHANGED_FILES=$files" >> $GITHUB_ENV
         echo "Detected changed files: $files"
