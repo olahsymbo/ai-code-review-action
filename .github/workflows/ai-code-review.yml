@@ -1,0 +1,23 @@
+name: AI Code Review
+
+on:
+  # Trigger on pull requests
+  pull_request:
+    types: [opened, synchronize, reopened]
+  # ✅ Allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run AI Code Review
+        uses: olahsymbo/ai-code-review-action@v1
+        with:
+          token_github: ${{ secrets.TOKENGITHUB }}
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+
