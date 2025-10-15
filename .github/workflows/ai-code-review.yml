@@ -38,8 +38,8 @@ jobs:
           fi
 
           files=$(echo "$files" \
-            | grep -E '\.(py|js|ts|json|txt)$' \
-            | grep -vE '^\.github/|^actions/ai_code_review/' \
+            | grep -E '\.(py|js|ts|json|txt)$' || true \
+            | grep -vE '^\.github/|^actions/ai_code_review/' || true \
             | paste -sd "," -)
 
           echo "CHANGED_FILES=$files" >> $GITHUB_ENV
