@@ -32,16 +32,16 @@ jobs:
       - name: Detect changed files
         run: |
           if git rev-parse HEAD^ >/dev/null 2>&1; then
-            files=$(git diff --name-only HEAD^ HEAD \
-              | grep -E '\.(py|js|ts|json|txt)$' \
-              | grep -vE '^\.github/|^actions/ai_code_review/' \
-              | paste -sd "," -)
+            files=$(git diff --name-only HEAD^ HEAD)
           else
-            files=$(git diff --name-only HEAD \
-              | grep -E '\.(py|js|ts|json|txt)$' \
-              | grep -vE '^\.github/|^actions/ai_code_review/' \
-              | paste -sd "," -)
+            files=$(git diff --name-only $(git hash-object -t tree /dev/null) HEAD)
           fi
+
+          files=$(echo "$files" \
+            | grep -E '\.(py|js|ts|json|txt)$' \
+            | grep -vE '^\.github/|^actions/ai_code_review/' \
+            | paste -sd "," -)
+
           echo "CHANGED_FILES=$files" >> $GITHUB_ENV
           echo "Detected changed files: $files"
 
