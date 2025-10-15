@@ -14,11 +14,14 @@ class UserManager:
     
     def add_user(self, name: str, email: str, age: int = None):
         """Add a new user to the system"""
-        # Potential issue: no validation
+        # Adding some intentional issues for AI to catch
+        if not name:
+            raise ValueError("Name cannot be empty")
+        
         user = {
             "name": name,
             "email": email,
-            "age": age
+            "age": age  # No validation for negative ages
         }
         self.users.append(user)
         return user
