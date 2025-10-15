@@ -3,6 +3,7 @@ name: AI Code Review
 on:
   pull_request:
     types: [opened, synchronize]
+  workflow_dispatch:  # Optional: allows manual trigger
 
 jobs:
   review:
@@ -10,9 +11,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Important for git diff to work
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install langchain openai
 
       - name: Run AI Code Review
         uses: olahsymbo/ai-code-review-action@v1
         with:
           token_github: ${{ secrets.TOKENGITHUB }}
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+
