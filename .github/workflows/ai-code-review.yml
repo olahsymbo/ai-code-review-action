@@ -1,0 +1,83 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:  # allows manual trigger
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout code safely
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # fetch previous commit to allow git diff HEAD^ HEAD
+
+      # 2️⃣ Set up Python
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # 3️⃣ Install dependencies
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install langchain langchain-openai langchain-core langchain-community PyYAML requests
+
+      # 4️⃣ Detect changed files safely
+      - name: Detect changed files
+        run: |
+          # For PR events, compare with the base branch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "Pull request detected, comparing with base branch..."
+            files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          else
+            echo "Non-PR event, comparing with previous commit..."
+            if git rev-parse HEAD^ >/dev/null 2>&1; then
+              files=$(git diff --name-only HEAD^ HEAD)
+            else
+              files=$(git diff --name-only $(git hash-object -t tree /dev/null) HEAD)
+            fi
+          fi
+
+          echo "All changed files: $files"
+          
+          files=$(echo "$files" \
+            | grep -E '\.(py|js|ts|json|txt)$' || true \
+            | grep -vE '^\.github/|^actions/ai_code_review/' || true \
+            | paste -sd "," -)
+
+          echo "CHANGED_FILES=$files" >> $GITHUB_ENV
+          echo "Detected changed files: $files"
+
+      # 5️⃣ Run AI Code Review
+      - name: Run AI Code Review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: |
+          echo "=== Debug Information ==="
+          echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME"
+          echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+          echo "CHANGED_FILES: '$CHANGED_FILES'"
+          echo "========================"
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "❌ No relevant files changed. Skipping review."
+            echo "This might be because:"
+            echo "1. Only workflow files changed"
+            echo "2. No .py/.js/.ts/.json/.txt files were modified"
+            echo "3. All changed files are excluded patterns"
+          else
+            echo "✅ Found changed files: $CHANGED_FILES"
+            echo "🤖 Starting AI code review..."
+            python ai_code_review.py
+          fi
+
