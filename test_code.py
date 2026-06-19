@@ -54,7 +54,7 @@ class UserManager:
 def process_users(user_list: List[str]):
     """Process a list of user names"""
     results = []
-    
+    nonlocal_var = current_user  
     for name in user_list:
         # String concatenation instead of f-strings
         processed_name = "User: " + name.upper()
@@ -84,3 +84,4 @@ if __name__ == "__main__":
     names = ["alice", "bob", "charlie"]
     processed = process_users(names)
     print(f"Processed names: {processed}")
+
