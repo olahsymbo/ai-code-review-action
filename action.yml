@@ -1,72 +1,118 @@
 name: "AI Code Review"
-description: "LangChain-based code review bot using OpenAI"
+description: "Cross-provider code review using any available GPT, Claude, and Gemini keys"
 inputs:
   openai_api_key:
-    description: "OpenAI API Key"
-    required: true
+    description: "OpenAI API key"
+    required: false
+  anthropic_api_key:
+    description: "Anthropic API key"
+    required: false
+  gemini_api_key:
+    description: "Google Gemini API key"
+    required: false
   token_github:
-    description: "GitHub Token for posting comments"
+    description: "GitHub token used to create or update the PR comment"
     required: true
-    
-outputs: {}
+  review_level:
+    description: "Review strictness: balanced or aggressive"
+    required: false
+    default: "aggressive"
+  openai_model:
+    description: "OpenAI model"
+    required: false
+    default: "gpt-5.5"
+  anthropic_model:
+    description: "Anthropic model"
+    required: false
+    default: "claude-opus-4-8"
+  gemini_model:
+    description: "Gemini model"
+    required: false
+    default: "gemini-3.1-pro-preview"
+  max_tokens_per_reviewer:
+    description: "Maximum output tokens per specialist (150-1000)"
+    required: false
+    default: "450"
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 2
-
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.10"
+        python-version: "3.13"
 
-    - name: Install dependencies
+    - name: Install reviewer dependencies
       shell: bash
-      run: |
-        python -m pip install --upgrade pip
-        pip install langchain langchain-openai langchain-core langchain-community
+      run: >-
+        python -m pip install --disable-pip-version-check
+        "langchain-core>=0.3" "langchain-openai>=0.2"
+        "langchain-anthropic>=0.3" "langchain-google-genai>=2"
 
-    - name: Detect changed files
-      id: detect
+    - name: Build pull-request diff
       shell: bash
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       run: |
-        files=$(git diff --name-only HEAD^ HEAD \
-          | grep -E '\.(py|js|ts|json|txt)$' || true \
-          | grep -vE '^\.github/|^actions/ai_code_review/' || true \
-          | paste -sd "," -)
-        echo "CHANGED_FILES=$files" >> $GITHUB_ENV
-        echo "Detected changed files: $files"
+        if [[ -z "$BASE_SHA" || -z "$HEAD_SHA" ]]; then
+          echo "This action must run on a pull_request event." >&2
+          exit 1
+        fi
+        if ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null || ! git cat-file -e "$HEAD_SHA^{commit}" 2>/dev/null; then
+          git fetch --no-tags --depth=1 origin "$BASE_SHA" "$HEAD_SHA"
+        fi
+        git diff --unified=30 --no-ext-diff "$BASE_SHA" "$HEAD_SHA" -- \
+          ':(exclude)*.lock' ':(exclude)package-lock.json' ':(exclude)yarn.lock' \
+          > "$RUNNER_TEMP/ai-review.diff"
 
-    - name: Run AI Code Review
+    - name: Run strict AI review
       shell: bash
       env:
         OPENAI_API_KEY: ${{ inputs.openai_api_key }}
-      run: |
-        if [ -z "$CHANGED_FILES" ]; then
-          echo "No relevant files changed. Skipping review." > review_output.txt
-        else
-          python ai_code_review.py > review_output.txt
-        fi
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
+        GEMINI_API_KEY: ${{ inputs.gemini_api_key }}
+        OPENAI_MODEL: ${{ inputs.openai_model }}
+        ANTHROPIC_MODEL: ${{ inputs.anthropic_model }}
+        GEMINI_MODEL: ${{ inputs.gemini_model }}
+        REVIEW_LEVEL: ${{ inputs.review_level }}
+        REVIEW_MAX_TOKENS: ${{ inputs.max_tokens_per_reviewer }}
+        REVIEW_DIFF_PATH: ${{ runner.temp }}/ai-review.diff
+        REVIEW_OUTPUT_PATH: ${{ runner.temp }}/ai-review.md
+      run: python "$GITHUB_ACTION_PATH/ai_code_review.py"
 
-    - name: Save review output
-      shell: bash
-      run: cat review_output.txt
-
-    - name: Post Review Comment
-      uses: actions/github-script@v6
+    - name: Create or update review comment
+      uses: actions/github-script@v7
+      env:
+        REVIEW_PATH: ${{ runner.temp }}/ai-review.md
       with:
         github-token: ${{ inputs.token_github }}
         script: |
           const fs = require('fs');
-          const review = fs.readFileSync('review_output.txt', 'utf8');
-          if (review.trim()) {
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+          const marker = '<!-- ai-code-review-action -->';
+          const review = fs.readFileSync(process.env.REVIEW_PATH, 'utf8').trim();
+          const body = `${marker}\n# Strict AI Code Review\n\n${review}\n\n---\n_AI-likelihood is heuristic, not proof of authorship._`;
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            per_page: 100
+          });
+          const previous = comments.find(comment =>
+            comment.user.type === 'Bot' && comment.body?.includes(marker)
+          );
+          if (previous) {
+            await github.rest.issues.updateComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `### 🤖 Advanced AI Code Review Bot\n\n${review}`
+              comment_id: previous.id,
+              body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
             });
           }
