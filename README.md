@@ -1,4 +1,4 @@
-# Strict AI Code Review Action
+# AI Code Review Action
 
 A pull-request reviewer that can use GPT, Claude, and Gemini together. It runs one compact review per configured provider over the actual Git diff.
 
