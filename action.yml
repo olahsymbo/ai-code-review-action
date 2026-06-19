@@ -30,9 +30,9 @@ inputs:
     required: false
     default: "gemini-3.1-pro-preview"
   max_tokens_per_reviewer:
-    description: "Maximum output tokens per specialist (150-1000)"
+    description: "Maximum output tokens per provider (150-4000)"
     required: false
-    default: "450"
+    default: "1200"
 
 runs:
   using: "composite"
@@ -44,10 +44,7 @@ runs:
 
     - name: Install reviewer dependencies
       shell: bash
-      run: >-
-        python -m pip install --disable-pip-version-check
-        "langchain-core>=0.3" "langchain-openai>=0.2"
-        "langchain-anthropic>=0.3" "langchain-google-genai>=2"
+      run: python -m pip install --disable-pip-version-check -r "$GITHUB_ACTION_PATH/requirements.txt"
 
     - name: Build pull-request diff
       shell: bash

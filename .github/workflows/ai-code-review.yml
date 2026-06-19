@@ -30,6 +30,9 @@ jobs:
       - name: Compile Python
         run: python -m py_compile ai_code_review.py test_ai_code_review.py
 
+      - name: Install runtime dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
       - name: Run unit tests
         run: python -m unittest -v
 
@@ -60,7 +63,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           review_level: aggressive
-          max_tokens_per_reviewer: "450"
+          max_tokens_per_reviewer: "1200"
 
       - name: Explain skipped review
         if: env.HAS_AI_KEY != 'true'

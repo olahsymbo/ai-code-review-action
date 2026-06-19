@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import Callable
 
 MAX_DIFF_CHARS = 40_000
-DEFAULT_REVIEW_TOKENS = 450
+DEFAULT_REVIEW_TOKENS = 1_200
 MIN_REVIEW_TOKENS = 150
-MAX_REVIEW_TOKENS = 1_000
+MAX_REVIEW_TOKENS = 4_000
 VALID_REVIEW_LEVELS = {"balanced", "aggressive"}
 
 

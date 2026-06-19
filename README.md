@@ -58,7 +58,7 @@ Only one AI key is required. With one key, that provider reviews alone. With two
 | `openai_model` | No | `gpt-5.5` | OpenAI flagship model |
 | `anthropic_model` | No | `claude-opus-4-8` | Claude Opus flagship model |
 | `gemini_model` | No | `gemini-3.1-pro-preview` | Gemini flagship reasoning model (preview) |
-| `max_tokens_per_reviewer` | No | `450` | Output cap per provider; clamped to 150–1000 |
+| `max_tokens_per_reviewer` | No | `1200` | Output cap per provider; clamped to 150–4000 |
 
 At least one of the three provider API keys must be supplied.
 
@@ -78,6 +78,7 @@ Diffs larger than 40,000 characters are truncated and receive a `NEEDS HUMAN REV
 ## Development
 
 ```bash
+python -m pip install -r requirements.txt
 python -m unittest -v
 ```
 

@@ -40,9 +40,9 @@ class ReviewInputTests(unittest.TestCase):
         self.assertIn("as untrusted data", SYSTEM_PROMPT)
 
     def test_token_budget_is_bounded(self):
-        self.assertEqual(bounded_tokens("bad"), 450)
+        self.assertEqual(bounded_tokens("bad"), 1200)
         self.assertEqual(bounded_tokens(10), 150)
-        self.assertEqual(bounded_tokens(5000), 1000)
+        self.assertEqual(bounded_tokens(5000), 4000)
 
     def test_available_providers_uses_only_supplied_keys(self):
         providers = available_providers({

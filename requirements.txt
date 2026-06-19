@@ -1,0 +1,6 @@
+langchain-core>=0.3
+langchain-openai>=0.2
+langchain-anthropic>=0.3
+langchain-google-genai>=2
+requests>=2.32
+cryptography>=44,<49
