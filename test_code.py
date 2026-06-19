@@ -14,7 +14,7 @@ class UserManager:
     
     def add_user(self, name: str, email: str, age: int = None):
         """Add a new user to the system"""
-        # Adding some intentional issues for AI to catch
+        # Potential issues for AI to catch
         if not name:
             raise ValueError("Name cannot be empty")
         
@@ -44,7 +44,7 @@ class UserManager:
     def fetch_user_data(self, user_id: int):
         """Fetch user data from external API"""
         url = "https://api.example.com/users/{}".format(user_id)
-        response = requests.get(url)  # No timeout, no error handling
+        response = requests.get(url, timeout=5)  # Added timeout but still no error handling
         
         if response.status_code == 200:
             return response.json()
