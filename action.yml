@@ -88,7 +88,7 @@ runs:
           const fs = require('fs');
           const marker = '<!-- ai-code-review-action -->';
           const review = fs.readFileSync(process.env.REVIEW_PATH, 'utf8').trim();
-          const body = `${marker}\n# Strict AI Code Review\n\n${review}\n\n---\n_AI-likelihood is heuristic, not proof of authorship._`;
+          const body = `${marker}\n# AI Code Review\n\n${review}\n\n---\n_AI-likelihood is heuristic, not proof of authorship._`;
           const { data: comments } = await github.rest.issues.listComments({
             owner: context.repo.owner,
             repo: context.repo.repo,
